@@ -8,7 +8,6 @@ except ModuleNotFoundError:
 import os
 import pathlib
 import warnings
-import submitit
 
 import torch
 import wandb
