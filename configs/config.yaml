@@ -3,6 +3,19 @@ defaults:
     - model : discrete
     - train : train_default
     - dataset : qm9
+    - override hydra/launcher: submitit_slurm
+
+hydra:
+    launcher:
+        timeout_min: 60
+        cpus_per_task: 1
+        gpus_per_node: 0
+        tasks_per_node: 1
+        nodes: 1
+        name: ${hydra.job.name}
+        _target_: hydra_plugins.hydra_submitit_launcher.submitit_launcher.SlurmLauncher
+        mem_per_cpu: 10G
+
 
 
 

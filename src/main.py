@@ -8,6 +8,7 @@ except ModuleNotFoundError:
 import os
 import pathlib
 import warnings
+import submitit
 
 import torch
 import wandb
@@ -33,7 +34,6 @@ from diffusion.extra_features_molecular import ExtraMolecularFeatures
 
 warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
-
 def get_resume(cfg, model_kwargs):
     """ Resumes a run. It loads previous config without allowing to update keys (used for testing). """
     saved_cfg = cfg.copy()
@@ -48,7 +48,6 @@ def get_resume(cfg, model_kwargs):
     cfg.general.name = name
     cfg = utils.update_config_with_new_keys(cfg, saved_cfg)
     return cfg, model
-
 
 def get_resume_adaptive(cfg, model_kwargs):
     """ Resumes a run. It loads previous config but allows to make some changes (used for resuming training)."""
@@ -75,7 +74,6 @@ def get_resume_adaptive(cfg, model_kwargs):
     new_cfg = utils.update_config_with_new_keys(new_cfg, saved_cfg)
     return new_cfg, model
 
-
 def setup_wandb(cfg):
     config_dict = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
     kwargs = {'name': cfg.general.name, 'project': f'graph_ddm_{cfg.dataset.name}', 'config': config_dict,
@@ -83,7 +81,6 @@ def setup_wandb(cfg):
     wandb.init(**kwargs)
     wandb.save('*.txt')
     return cfg
-
 
 @hydra.main(version_base='1.1', config_path='../configs', config_name='config')
 def main(cfg: DictConfig):
@@ -235,6 +232,7 @@ def main(cfg: DictConfig):
                     print("Loading checkpoint", ckpt_path)
                     setup_wandb(cfg)
                     trainer.test(model, datamodule=datamodule, ckpt_path=ckpt_path)
+
 
 
 if __name__ == '__main__':
