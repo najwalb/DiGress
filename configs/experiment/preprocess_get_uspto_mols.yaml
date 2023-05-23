@@ -1,0 +1,11 @@
+# @package _global_
+general:
+  project: 'molgen' # for wandb logging
+  name : 'get_uspto_molecules'
+  task: 'mol'
+dataset:
+  name: uspto-50k
+  number: ''
+  num_workers: 0
+train:
+    seed: 1
