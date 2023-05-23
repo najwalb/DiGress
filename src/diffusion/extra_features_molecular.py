@@ -52,6 +52,6 @@ class WeightFeature:
         self.atom_weight_list = torch.tensor(list(atom_weights.values()))
 
     def __call__(self, noisy_data):
-        X = torch.argmax(noisy_data['X_t'], dim=-1)     # (bs, n)
-        X_weights = self.atom_weight_list[X]            # (bs, n)
+        X = torch.argmax(noisy_data['X_t'], dim=-1)    # (bs, n)
+        X_weights = self.atom_weight_list[X.cpu()]            # (bs, n)
         return X_weights.sum(dim=-1).unsqueeze(-1).type_as(noisy_data['X_t']) / self.max_weight     # (bs, 1)

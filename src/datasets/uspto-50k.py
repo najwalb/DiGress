@@ -45,11 +45,7 @@ class SelectHOMOTransform:
         data.y = data.y[..., 1:]
         return data
 
-class QM9Dataset(InMemoryDataset):
-    raw_url = ('https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/'
-               'molnet_publish/qm9.zip')
-    raw_url2 = 'https://ndownloader.figshare.com/files/3195404'
-    processed_url = 'https://data.pyg.org/datasets/qm9_v3.zip'
+class USPTO50KDataset(InMemoryDataset):
 
     def __init__(self, stage, root, remove_h: bool, target_prop=None,
                  transform=None, pre_transform=None, pre_filter=None):
@@ -186,7 +182,7 @@ class QM9Dataset(InMemoryDataset):
         torch.save(self.collate(data_list), self.processed_paths[self.file_idx])
 
 
-class QM9DataModule(MolecularDataModule):
+class USPTO50KDataModule(MolecularDataModule):
     def __init__(self, cfg):
         self.datadir = cfg.dataset.datadir
         super().__init__(cfg)
@@ -216,7 +212,7 @@ class QM9DataModule(MolecularDataModule):
 
 
 
-class QM9infos(AbstractDatasetInfos):
+class USPTO50Kinfos(AbstractDatasetInfos):
     def __init__(self, datamodule, cfg, recompute_statistics=False):
         self.remove_h = cfg.dataset.remove_h
         self.need_to_strip = False        # to indicate whether we need to ignore one output from the model
@@ -277,89 +273,3 @@ class QM9infos(AbstractDatasetInfos):
             np.savetxt('valencies.txt', valencies.numpy())
             self.valency_distribution = valencies
             assert False
-
-
-def get_train_smiles(cfg, train_dataloader, dataset_infos, evaluate_dataset=False):
-    if evaluate_dataset:
-        assert dataset_infos is not None, "If wanting to evaluate dataset, need to pass dataset_infos"
-    datadir = cfg.dataset.datadir
-    remove_h = cfg.dataset.remove_h
-    atom_decoder = dataset_infos.atom_decoder
-    root_dir = pathlib.Path(os.path.realpath(__file__)).parents[2]
-    smiles_file_name = 'train_smiles_no_h.npy' if remove_h else 'train_smiles_h.npy'
-    smiles_path = os.path.join(root_dir, datadir, smiles_file_name)
-    if os.path.exists(smiles_path):
-        print("Dataset smiles were found.")
-        train_smiles = np.load(smiles_path)
-    else:
-        print("Computing dataset smiles...")
-        train_smiles = compute_qm9_smiles(atom_decoder, train_dataloader, remove_h)
-        np.save(smiles_path, np.array(train_smiles))
-
-    if evaluate_dataset:
-        train_dataloader = train_dataloader
-        all_molecules = []
-        for i, data in enumerate(train_dataloader):
-            dense_data, node_mask = utils.to_dense(data.x, data.edge_index, data.edge_attr, data.batch)
-            dense_data = dense_data.mask(node_mask, collapse=True)
-            X, E = dense_data.X, dense_data.E
-
-            for k in range(X.size(0)):
-                n = int(torch.sum((X != -1)[k, :]))
-                atom_types = X[k, :n].cpu()
-                edge_types = E[k, :n, :n].cpu()
-                all_molecules.append([atom_types, edge_types])
-
-        print("Evaluating the dataset -- number of molecules to evaluate", len(all_molecules))
-        metrics = compute_molecular_metrics(molecule_list=all_molecules, train_smiles=train_smiles,
-                                            dataset_info=dataset_infos)
-        print(metrics[0])
-
-    return train_smiles
-
-
-def compute_qm9_smiles(atom_decoder, train_dataloader, remove_h):
-    '''
-
-    :param dataset_name: qm9 or qm9_second_half
-    :return:
-    '''
-    print(f"\tConverting QM9 dataset to SMILES for remove_h={remove_h}...")
-
-    mols_smiles = []
-    len_train = len(train_dataloader)
-    invalid = 0
-    disconnected = 0
-    for i, data in enumerate(train_dataloader):
-        dense_data, node_mask = utils.to_dense(data.x, data.edge_index, data.edge_attr, data.batch)
-        dense_data = dense_data.mask(node_mask, collapse=True)
-        X, E = dense_data.X, dense_data.E
-
-        n_nodes = [int(torch.sum((X != -1)[j, :])) for j in range(X.size(0))]
-
-        molecule_list = []
-        for k in range(X.size(0)):
-            n = n_nodes[k]
-            atom_types = X[k, :n].cpu()
-            edge_types = E[k, :n, :n].cpu()
-            molecule_list.append([atom_types, edge_types])
-
-        for l, molecule in enumerate(molecule_list):
-            mol = build_molecule_with_partial_charges(molecule[0], molecule[1], atom_decoder)
-            smile = mol2smiles(mol)
-            if smile is not None:
-                mols_smiles.append(smile)
-                mol_frags = Chem.rdmolops.GetMolFrags(mol, asMols=True, sanitizeFrags=True)
-                if len(mol_frags) > 1:
-                    print("Disconnected molecule", mol, mol_frags)
-                    disconnected += 1
-            else:
-                print("Invalid molecule obtained.")
-                invalid += 1
-
-        if i % 1000 == 0:
-            print("\tConverting QM9 dataset to SMILES {0:.2%}".format(float(i) / len_train))
-    print("Number of invalid molecules", invalid)
-    print("Number of disconnected molecules", disconnected)
-    return mols_smiles
-
