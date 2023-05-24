@@ -237,21 +237,21 @@ def main(cfg: DictConfig):
                     setup_wandb(cfg)
                     trainer.test(model, datamodule=datamodule, ckpt_path=ckpt_path)
     
-        # version control through git
-    # torch.save(model.state_dict(), f'model.pt')
+    # version control through git
+    torch.save(model.state_dict(), f'model.pt')
 
     # model_path = checkpoint_callback.best_model_path
     # last_path  = checkpoint_callback.last_model_path
     # print(f'last_path {last_path}\n')
     # print(f'model_path {model_path}\n')
 
-    # t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    # id = cfg.general.name+'-'+t # to make id unique
-    # run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
-    # artifact = wandb.Artifact(cfg.general.name, type='model')
-    # artifact.add_file('model.pt', name='model.pt')
-    # run.log_artifact(artifact)  
-    # run.finish()
+    t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    id = cfg.general.name+'-'+t # to make id unique
+    run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
+    artifact = wandb.Artifact(cfg.general.name, type='model')
+    artifact.add_file('model.pt', name='model.pt')
+    run.log_artifact(artifact)  
+    run.finish()
 
 if __name__ == '__main__':
     main()
