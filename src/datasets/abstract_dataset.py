@@ -102,8 +102,8 @@ class MolecularDataModule(AbstractDataModule):
                     valency = (edges_total * multiplier).sum()
                     valencies[valency.long().item()] += 1
         valencies = valencies / valencies.sum()
+        
         return valencies
-
 
 class AbstractDatasetInfos:
     def complete_infos(self, n_nodes, node_types):

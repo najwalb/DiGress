@@ -214,8 +214,6 @@ class QM9DataModule(MolecularDataModule):
                                        target_prop=target, transform=transform)}
         super().prepare_data(datasets)
 
-
-
 class QM9infos(AbstractDatasetInfos):
     def __init__(self, datamodule, cfg, recompute_statistics=False):
         self.remove_h = cfg.dataset.remove_h

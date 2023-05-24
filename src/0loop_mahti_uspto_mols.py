@@ -9,7 +9,7 @@ def mkdir_p(dir):
         os.makedirs(dir)
         
 conda_env = 'digress'
-script_name = "preprocess_get_uspto_mols.py"
+script_name = "try.py"
 job_directory = os.path.join('../outputs/', script_name.split('.py')[0])
 
 output_dir = os.path.join(job_directory, 'out')
@@ -19,7 +19,7 @@ jobids_file = os.path.join(job_directory, 'jobids.txt')
 mkdir_p(job_directory)
 mkdir_p(output_dir)
 
-args_ = ['preprocess_get_uspto_mols'] # 10, ''
+args_ = ['uspto50k'] # 10, ''
 
 for arg in args_:
     print(f"Creating job {arg}... ")
@@ -38,12 +38,12 @@ for arg in args_:
         # fh.writelines("#SBATCH --partition=gpusmall\n")
         # fh.writelines("#SBATCH --gres=gpu:a100:1\n")
         fh.writelines("#SBATCH --cpus-per-task=4\n")
-        fh.writelines("#SBATCH --time=02:00:00\n")
+        fh.writelines("#SBATCH --time=00:15:00\n")
         fh.writelines("#SBATCH --array=1-1\n")
         fh.writelines("module purge\n")
         fh.writelines("module load python-data\n\n")
         fh.writelines(f"export PYTHONPATH=/projappl/project_2006950/{conda_env}/lib/python3.10/site-packages/\n")
-        fh.writelines(f"python3 {script_name} +experiment={arg}.yaml"+
+        fh.writelines(f"python3 {script_name} +experiment={arg}.yaml dataset=uspto50k"+
                       f" hydra.run.dir=../experiments/dataset/uspto-50k/{arg}\n")
 
     result = subprocess.run(args="sbatch", stdin=open(job_file, 'r'), capture_output=True)

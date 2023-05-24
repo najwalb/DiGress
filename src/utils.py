@@ -9,6 +9,7 @@ from pytorch_lightning.utilities import rank_zero_only
 from torch_geometric.utils import to_dense_adj, to_dense_batch
 import torch
 
+from rdkit import Chem
 
 def create_folders(args):
     try:
