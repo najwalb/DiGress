@@ -216,7 +216,7 @@ def main(cfg: DictConfig):
                       logger=[])
     print(f'logging wanbd weights ....')
     wandb.watch(model, log_freq=cfg.general.log_every_steps, log_graph=True)
-
+    
     if not cfg.general.test_only:
         trainer.fit(model, datamodule=datamodule, ckpt_path=cfg.general.resume)
         if cfg.general.name not in ['debug', 'test']:
