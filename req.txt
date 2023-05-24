@@ -1,0 +1,21 @@
+pip install pandas==1.5.3
+pip install torch-geometric -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
+pip install imageio-ffmpeg
+pip install seaborn
+pip install pyyaml
+pip install imageio==2.26.1
+pip install numpy>=1.11.1
+pip install matplotlib==3.6.1
+pip install scipy
+pip install tqdm
+pip install wandb
+pip install hydra-core
+pip install pytorch_lightning==1.7.2
+pip install torchmetrics
+pip install networkx==2.8.7
+pip install overrides
+pip install pygsp
+pip install pyemd
+pip install rdkit==2023.3.1
+pip install git+https://github.com/igor-krawczuk/mini-moses@master

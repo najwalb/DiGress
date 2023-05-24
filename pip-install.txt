@@ -1,0 +1,18 @@
+# old digress.sh
+
+cd /scratch/project_2006950/DiGress
+
+module purge
+module load python-data
+
+export PYTHONPATH=/projappl/project_2006950/digress/lib/python3.10/site-packages/
+
+# old digress-interactive
+
+cd /scratch/project_2006950/DiGress
+
+module purge
+module load python-data
+
+export PYTHONPATH=/projappl/project_2006950/digress/lib/python3.10/site-pack    
+sinteractive --account project_2006950 --cores 10 --time 03:00:00
