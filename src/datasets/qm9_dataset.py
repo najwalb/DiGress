@@ -276,7 +276,6 @@ class QM9infos(AbstractDatasetInfos):
             self.valency_distribution = valencies
             assert False
 
-
 def get_train_smiles(cfg, train_dataloader, dataset_infos, evaluate_dataset=False):
     if evaluate_dataset:
         assert dataset_infos is not None, "If wanting to evaluate dataset, need to pass dataset_infos"

@@ -1,7 +1,10 @@
 # Byte-compiled / optimized / DLL files
+=1.11.1
+checkpoints
 chains
 graphs
 wandb
+generated_samples
 
 __pycache__/
 *.py[cod]
