@@ -96,6 +96,7 @@ def get_extra_features(cfg, dataset_infos):
 @hydra.main(version_base='1.1', config_path='../configs', config_name='config')
 def main(cfg: DictConfig):
     dataset_config = cfg["dataset"]
+    exit()
 
 
     if dataset_config["name"] in ['sbm', 'comm-20', 'planar']:

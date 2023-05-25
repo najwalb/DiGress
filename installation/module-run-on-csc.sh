@@ -15,8 +15,6 @@ module purge
 module load python-data
 
 export PYTHONUSERBASE=/projappl/project_2006950/digress
-pip install --user imageio-ffmpeg
-# pip install --user memory_profiler
 pip install --user seaborn
 pip install --user pyyaml
 pip install --user imageio
@@ -31,8 +29,6 @@ pip install --user torchmetrics
 pip install --user torch --extra-index-url https://download.pytorch.org/whl/cu116
 pip install --user torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.13.0+cu116.html
 
-# pip install --user ipdb
-# pip install --user pdbpp
 pip install --user networkx==2.8.7
 pip install --user overrides
 pip install --user pygsp
@@ -40,7 +36,6 @@ pip install --user pyemd
 
 pip install --user rdkit==2023.3.1
 pip install --user git+https://github.com/igor-krawczuk/mini-moses@master
-# pip install --user notebook
 
 ## use conda env locally
 # module load python-data
