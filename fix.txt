@@ -1,0 +1,3 @@
+pip uninstall pandas
+
+pip install pandas==1.5.3
