@@ -19,7 +19,7 @@ jobids_file = os.path.join(job_directory, 'jobids.txt')
 mkdir_p(job_directory)
 mkdir_p(output_dir)
 
-args_ = ['try_mdoule'] # 10, ''
+args_ = ['qm9_no_h']
 
 for arg in args_:
     print(f"Creating job {arg}... ")
@@ -35,21 +35,21 @@ for arg in args_:
         fh.writelines(f"#SBATCH --output={output_dir}/{arg}_%a.out\n")
         fh.writelines(f"#SBATCH --error={output_dir}/{arg}_%a.err\n")
         fh.writelines("#SBATCH --account=project_2007775\n")
-        # fh.writelines("#SBATCH --partition=gpusmall\n")
-        # fh.writelines("#SBATCH --gres=gpu:a100:1\n")
-        fh.writelines("#SBATCH --cpus-per-task=1\n")
-        fh.writelines("#SBATCH --time=00:05:00\n")
+        fh.writelines("#SBATCH --partition=gpusmall\n")
+        fh.writelines("#SBATCH --gres=gpu:a100:1\n")
+        fh.writelines("#SBATCH --cpus-per-task=4\n")
+        fh.writelines("#SBATCH --time=00:10:00\n")
         fh.writelines("#SBATCH --array=1-1\n")
         fh.writelines("module purge\n")
         fh.writelines("module load git\n\n")
         fh.writelines("module load gcc\n\n")
-        fh.writelines("module load tykky\n\n")
+        # fh.writelines("module load tykky\n\n")
         # fh.writelines("export PATH=/appl/opt/python/3.10.9-gnu112/bin:$PATH\n")
         # #fh.writelines(f"export PYTHONPATH=/projappl/project_2006950/{conda_env}/lib/python3.10/site-packages/\n")
         fh.writelines(f"export PATH='/projappl/project_2006950/{conda_env}/bin:$PATH'\n")
-        fh.writelines(f"python3 try_module.py")
-        # fh.writelines(f"python3 {script_name} +experiment={arg}.yaml"+
-        #               f" hydra.run.dir=../experiments/mol/trained_models/{arg}\n")
+        # fh.writelines(f"python3 try_module.py")
+        fh.writelines(f"python3 {script_name} +experiment={arg}.yaml dataset=qm9"+
+                      f" hydra.run.dir=../experiments/mol/trained_models/{arg}\n")
 
     result = subprocess.run(args="sbatch", stdin=open(job_file, 'r'), capture_output=True)
     if 'job' not in result.stdout.decode("utf-8"):
