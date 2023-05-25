@@ -53,8 +53,8 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
         self.test_X_logp = SumExceptBatchMetric()
         self.test_E_logp = SumExceptBatchMetric()
 
-        self.train_metrics = train_metrics
-        self.sampling_metrics = sampling_metrics
+        # self.train_metrics = train_metrics
+        # self.sampling_metrics = sampling_metrics
 
         self.visualization_tools = visualization_tools
         self.extra_features = extra_features
@@ -91,7 +91,7 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
             self.limit_dist = utils.PlaceHolder(X=x_marginals, E=e_marginals,
                                                 y=torch.ones(self.ydim_output) / self.ydim_output)
 
-        self.save_hyperparameters(ignore=[train_metrics, sampling_metrics])
+        #self.save_hyperparameters(ignore=[train_metrics, sampling_metrics])
         self.start_epoch_time = None
         self.train_iterations = None
         self.val_iterations = None
@@ -114,8 +114,8 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
                                true_X=X, true_E=E, true_y=data.y,
                                log=i % self.log_every_steps == 0)
 
-        self.train_metrics(masked_pred_X=pred.X, masked_pred_E=pred.E, true_X=X, true_E=E,
-                           log=i % self.log_every_steps == 0)
+        # self.train_metrics(masked_pred_X=pred.X, masked_pred_E=pred.E, true_X=X, true_E=E,
+        #                    log=i % self.log_every_steps == 0)
 
         return {'loss': loss}
 
@@ -131,11 +131,11 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
         print("Starting train epoch...")
         self.start_epoch_time = time.time()
         self.train_loss.reset()
-        self.train_metrics.reset()
+        # self.train_metrics.reset()
 
     def on_train_epoch_end(self) -> None:
         self.train_loss.log_epoch_metrics(self.current_epoch, self.start_epoch_time)
-        self.train_metrics.log_epoch_metrics(self.current_epoch)
+        # self.train_metrics.log_epoch_metrics(self.current_epoch)
 
     def on_validation_epoch_start(self) -> None:
         self.val_nll.reset()
@@ -143,7 +143,7 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
         self.val_E_kl.reset()
         self.val_X_logp.reset()
         self.val_E_logp.reset()
-        self.sampling_metrics.reset()
+        #self.sampling_metrics.reset()
 
     def validation_step(self, data, i):
         dense_data, node_mask = utils.to_dense(data.x, data.edge_index, data.edge_attr, data.batch)
@@ -199,9 +199,9 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
                 samples_left_to_generate -= to_generate
                 chains_left_to_save -= chains_save
             print("Computing sampling metrics...")
-            self.sampling_metrics(samples, self.name, self.current_epoch, val_counter=-1, test=False)
+            # self.sampling_metrics(samples, self.name, self.current_epoch, val_counter=-1, test=False)
             print(f'Done. Sampling took {time.time() - start:.2f} seconds\n')
-            self.sampling_metrics.reset()
+            #self.sampling_metrics.reset()
 
     def on_test_epoch_start(self) -> None:
         print("Starting test...")
@@ -218,6 +218,7 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
         extra_data = self.compute_extra_data(noisy_data)
         pred = self.forward(noisy_data, extra_data, node_mask)
         nll = self.compute_val_loss(pred, noisy_data, dense_data.X, dense_data.E, data.y, node_mask, test=True)
+        
         return {'loss': nll}
 
     def test_epoch_end(self, outs) -> None:
@@ -279,12 +280,11 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
                     f.write("\n")
                 f.write("\n")
         print("Saved.")
-        print("Computing sampling metrics...")
-        self.sampling_metrics.reset()
-        self.sampling_metrics(samples, self.name, self.current_epoch, self.val_counter, test=True)
-        self.sampling_metrics.reset()
-        print("Done.")
-
+        # print("Computing sampling metrics...")
+        # self.sampling_metrics.reset()
+        # self.sampling_metrics(samples, self.name, self.current_epoch, self.val_counter, test=True)
+        # self.sampling_metrics.reset()
+        # print("Done.")
 
     def kl_prior(self, X, E, node_mask):
         """Computes the KL between q(z1 | x) and the prior p(z1) = Normal(0, 1).
@@ -646,7 +646,7 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
             the network input. """
 
         extra_features = self.extra_features(noisy_data)
-        extra_molecular_features = self.domain_features(noisy_data)
+        extra_molecular_features = self.domain_features(noisy_data, dataset_name=self.cfg.dataset.name)
 
         extra_X = torch.cat((extra_features.X, extra_molecular_features.X), dim=-1)
         extra_E = torch.cat((extra_features.E, extra_molecular_features.E), dim=-1)

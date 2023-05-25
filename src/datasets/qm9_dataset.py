@@ -24,31 +24,26 @@ def files_exist(files) -> bool:
     # re-processing of files on every instantiation.
     return len(files) != 0 and all([osp.exists(f) for f in files])
 
-
 def to_list(value: Any) -> Sequence:
     if isinstance(value, Sequence) and not isinstance(value, str):
         return value
     else:
         return [value]
 
-
 class RemoveYTransform:
     def __call__(self, data):
         data.y = torch.zeros((1, 0), dtype=torch.float)
         return data
-
 
 class SelectMuTransform:
     def __call__(self, data):
         data.y = data.y[..., :1]
         return data
 
-
 class SelectHOMOTransform:
     def __call__(self, data):
         data.y = data.y[..., 1:]
         return data
-
 
 class QM9Dataset(InMemoryDataset):
     raw_url = ('https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/'
@@ -218,8 +213,6 @@ class QM9DataModule(MolecularDataModule):
                     'test': QM9Dataset(stage='test', root=root_path, remove_h=self.cfg.dataset.remove_h,
                                        target_prop=target, transform=transform)}
         super().prepare_data(datasets)
-
-
 
 class QM9infos(AbstractDatasetInfos):
     def __init__(self, datamodule, cfg, recompute_statistics=False):
