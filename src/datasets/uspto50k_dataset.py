@@ -183,8 +183,15 @@ class USPTO50KDataModule(MolecularDataModule):
         return valencies
     
 class USPTO50Kinfos(AbstractDatasetInfos):
-    def __init__(self, datamodule, recompute_statistics=False):
+    def __init__(self, cfg, datamodule, recompute_statistics=False):
+        self.remove_h = cfg.dataset.remove_h
         self.max_n_nodes = 50
+        self.max_weight = 500
+        self.atom_weights = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 
+                             11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 
+                             19: 1, 20: 1, 21: 1, 22: 1, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1}
+        self.valencies = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+                          1, 1, 1, 1, 1, 1, 1, 1, 1]
         self.datamodule = datamodule
         self.name = 'uspto50k-mols'
         self.atom_decoder = ['none']+atom_types
@@ -204,7 +211,7 @@ class USPTO50Kinfos(AbstractDatasetInfos):
             self.n_nodes = torch.from_numpy(np.loadtxt(node_count_path))
             self.node_types = torch.from_numpy(np.loadtxt(atom_type_path))
             self.edge_types = torch.from_numpy(np.loadtxt(edge_type_path))
-            self.valency_distribution = torch.from_numpy(np.loadtxt(valency_dist_path))
+            self.valency_dist = torch.from_numpy(np.loadtxt(valency_dist_path))
         else:
             print('Recomputing\n')
             np.set_printoptions(suppress=True, precision=5)
@@ -217,10 +224,10 @@ class USPTO50Kinfos(AbstractDatasetInfos):
             self.edge_types = datamodule.edge_counts()
             print("Distribution of edge types", self.edge_types)
             np.savetxt(edge_type_path, self.edge_types.cpu().numpy())
-            valencies = datamodule.valency_count(self.max_n_nodes)
-            print("Distribution of the valencies", valencies)
-            np.savetxt(valency_dist_path, valencies.numpy())
-            self.valency_distribution = valencies
+            self.valency_dist = datamodule.valency_count(self.max_n_nodes)
+            print("Distribution of the valencies", self.valency_dist)
+            np.savetxt(valency_dist_path, self.valency_dist.numpy())
+            self.valency_distribution = self.valency_dist
 
         super().complete_infos(n_nodes=self.n_nodes, node_types=self.node_types)
 

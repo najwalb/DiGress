@@ -31,6 +31,7 @@ from metrics.molecular_metrics_discrete import TrainMolecularMetricsDiscrete
 from analysis.visualization import MolecularVisualization, NonMolecularVisualization
 from diffusion.extra_features import DummyExtraFeatures, ExtraFeatures
 from diffusion.extra_features_molecular import ExtraMolecularFeatures
+from datasets import uspto50k_dataset
 
 warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
@@ -82,9 +83,20 @@ def setup_wandb(cfg):
     wandb.save('*.txt')
     return cfg
 
+def get_extra_features(cfg, dataset_infos):
+    if cfg.model.type == 'discrete' and cfg.model.extra_features is not None:
+        extra_features = ExtraFeatures(cfg.model.extra_features, dataset_info=dataset_infos)
+        domain_features = ExtraMolecularFeatures(dataset_infos=dataset_infos)
+    else:
+        extra_features = DummyExtraFeatures()
+        domain_features = DummyExtraFeatures()
+    
+    return extra_features, domain_features
+
 @hydra.main(version_base='1.1', config_path='../configs', config_name='config')
 def main(cfg: DictConfig):
     dataset_config = cfg["dataset"]
+
 
     if dataset_config["name"] in ['sbm', 'comm-20', 'planar']:
         if dataset_config['name'] == 'sbm':
@@ -114,44 +126,57 @@ def main(cfg: DictConfig):
                         'sampling_metrics': sampling_metrics, 'visualization_tools': visualization_tools,
                         'extra_features': extra_features, 'domain_features': domain_features}
 
-    elif dataset_config["name"] in ['qm9', 'guacamol', 'moses']:
+    elif dataset_config["name"] in ['qm9', 'guacamol', 'moses', 'uspto50k']:
+  
         if dataset_config["name"] == 'qm9':
             datamodule = qm9_dataset.QM9DataModule(cfg)
             dataset_infos = qm9_dataset.QM9infos(datamodule=datamodule, cfg=cfg)
             datamodule.prepare_data()
             train_smiles = qm9_dataset.get_train_smiles(cfg=cfg, train_dataloader=datamodule.train_dataloader(),
                                                         dataset_infos=dataset_infos, evaluate_dataset=False)
+            extra_features, domain_features = get_extra_features(cfg, dataset_infos)
+            dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
+                                                domain_features=domain_features)
+            
         elif dataset_config['name'] == 'guacamol':
             datamodule = guacamol_dataset.GuacamolDataModule(cfg)
             dataset_infos = guacamol_dataset.Guacamolinfos(datamodule, cfg)
             datamodule.prepare_data()
             train_smiles = None
-
+            extra_features, domain_features = get_extra_features(cfg, dataset_infos)            
+            dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
+                                                domain_features=domain_features)
         elif dataset_config.name == 'moses':
             datamodule = moses_dataset.MOSESDataModule(cfg)
             dataset_infos = moses_dataset.MOSESinfos(datamodule, cfg)
             datamodule.prepare_data()
             train_smiles = None
+            extra_features, domain_features = get_extra_features(cfg, dataset_infos)
+            dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
+                                                domain_features=domain_features)
+        elif dataset_config['name']=='uspto50k':
+            datamodule = uspto50k_dataset.USPTO50KDataModule(cfg)
+            datamodule.prepare_data()
+            dataset_infos = uspto50k_dataset.USPTO50Kinfos(cfg=cfg, datamodule=datamodule)
+            extra_features, domain_features = get_extra_features(cfg, dataset_infos)
+            dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
+                                                    domain_features=domain_features, dataset_name=dataset_config['name'])
+            train_smiles = None
         else:
             raise ValueError("Dataset not implemented")
 
-        if cfg.model.type == 'discrete' and cfg.model.extra_features is not None:
-            extra_features = ExtraFeatures(cfg.model.extra_features, dataset_info=dataset_infos)
-            domain_features = ExtraMolecularFeatures(dataset_infos=dataset_infos)
-        else:
-            extra_features = DummyExtraFeatures()
-            domain_features = DummyExtraFeatures()
-
-        dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
-                                                domain_features=domain_features)
-
-        if cfg.model.type == 'discrete':
+        if dataset_config['name']=='uspto50k':
+            train_metrics = None
+        elif cfg.model.type == 'discrete':
             train_metrics = TrainMolecularMetricsDiscrete(dataset_infos)
         else:
             train_metrics = TrainMolecularMetrics(dataset_infos)
 
         # We do not evaluate novelty during training
-        sampling_metrics = SamplingMolecularMetrics(dataset_infos, train_smiles)
+        if dataset_config['name']=='uspto50k':
+            sampling_metrics = None
+        else:
+            sampling_metrics = SamplingMolecularMetrics(dataset_infos, train_smiles)
         visualization_tools = MolecularVisualization(cfg.dataset.remove_h, dataset_infos=dataset_infos)
 
         model_kwargs = {'dataset_infos': dataset_infos, 'train_metrics': train_metrics,
@@ -237,21 +262,21 @@ def main(cfg: DictConfig):
                     setup_wandb(cfg)
                     trainer.test(model, datamodule=datamodule, ckpt_path=ckpt_path)
     
-    # version control through git
-    torch.save(model.state_dict(), f'model.pt')
+        # version control through git
+    # torch.save(model.state_dict(), f'model.pt')
 
     # model_path = checkpoint_callback.best_model_path
     # last_path  = checkpoint_callback.last_model_path
     # print(f'last_path {last_path}\n')
     # print(f'model_path {model_path}\n')
 
-    t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    id = cfg.general.name+'-'+t # to make id unique
-    run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
-    artifact = wandb.Artifact(cfg.general.name, type='model')
-    artifact.add_file('model.pt', name='model.pt')
-    run.log_artifact(artifact)  
-    run.finish()
+    # t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    # id = cfg.general.name+'-'+t # to make id unique
+    # run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
+    # artifact = wandb.Artifact(cfg.general.name, type='model')
+    # artifact.add_file('model.pt', name='model.pt')
+    # run.log_artifact(artifact)  
+    # run.finish()
 
 if __name__ == '__main__':
     main()

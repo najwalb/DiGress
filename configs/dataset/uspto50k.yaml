@@ -1,6 +1,7 @@
-name: 'uspto-50k'            # qm9, qm9_positional
+name: 'uspto50k'            # qm9, qm9_positional
 datadir: 'data/uspto-50k'
 datadist_dir: 'data/uspto-50k'
 remove_h: False
 random_subset: null
 pin_memory: False
+number: '10'
