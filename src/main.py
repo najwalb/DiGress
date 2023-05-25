@@ -31,6 +31,7 @@ from metrics.molecular_metrics_discrete import TrainMolecularMetricsDiscrete
 from analysis.visualization import MolecularVisualization, NonMolecularVisualization
 from diffusion.extra_features import DummyExtraFeatures, ExtraFeatures
 from diffusion.extra_features_molecular import ExtraMolecularFeatures
+from datasets import uspto50k_dataset
 
 warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
@@ -114,7 +115,7 @@ def main(cfg: DictConfig):
                         'sampling_metrics': sampling_metrics, 'visualization_tools': visualization_tools,
                         'extra_features': extra_features, 'domain_features': domain_features}
 
-    elif dataset_config["name"] in ['qm9', 'guacamol', 'moses']:
+    elif dataset_config["name"] in ['qm9', 'guacamol', 'moses', 'uspto50k']:
         if dataset_config["name"] == 'qm9':
             datamodule = qm9_dataset.QM9DataModule(cfg)
             dataset_infos = qm9_dataset.QM9infos(datamodule=datamodule, cfg=cfg)
@@ -126,12 +127,15 @@ def main(cfg: DictConfig):
             dataset_infos = guacamol_dataset.Guacamolinfos(datamodule, cfg)
             datamodule.prepare_data()
             train_smiles = None
-
         elif dataset_config.name == 'moses':
             datamodule = moses_dataset.MOSESDataModule(cfg)
             dataset_infos = moses_dataset.MOSESinfos(datamodule, cfg)
             datamodule.prepare_data()
             train_smiles = None
+        elif dataset_config['name']=='uspto50k':
+            datamodule = uspto50k_dataset.USPTO50KDataModule(cfg)
+            datamodule.prepare_data()
+            dataset_infos = uspto50k_dataset.USPTO50Kinfos(datamodule=datamodule)
         else:
             raise ValueError("Dataset not implemented")
 
@@ -216,7 +220,7 @@ def main(cfg: DictConfig):
                       logger=[])
     print(f'logging wanbd weights ....')
     wandb.watch(model, log_freq=cfg.general.log_every_steps, log_graph=True)
-    
+
     if not cfg.general.test_only:
         trainer.fit(model, datamodule=datamodule, ckpt_path=cfg.general.resume)
         if cfg.general.name not in ['debug', 'test']:
@@ -238,20 +242,20 @@ def main(cfg: DictConfig):
                     trainer.test(model, datamodule=datamodule, ckpt_path=ckpt_path)
     
         # version control through git
-    # torch.save(model.state_dict(), f'model.pt')
+    torch.save(model.state_dict(), f'model.pt')
 
     # model_path = checkpoint_callback.best_model_path
     # last_path  = checkpoint_callback.last_model_path
     # print(f'last_path {last_path}\n')
     # print(f'model_path {model_path}\n')
 
-    # t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    # id = cfg.general.name+'-'+t # to make id unique
-    # run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
-    # artifact = wandb.Artifact(cfg.general.name, type='model')
-    # artifact.add_file('model.pt', name='model.pt')
-    # run.log_artifact(artifact)  
-    # run.finish()
+    t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    id = cfg.general.name+'-'+t # to make id unique
+    run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
+    artifact = wandb.Artifact(cfg.general.name, type='model')
+    artifact.add_file('model.pt', name='model.pt')
+    run.log_artifact(artifact)  
+    run.finish()
 
 if __name__ == '__main__':
     main()
