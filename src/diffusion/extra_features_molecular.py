@@ -8,9 +8,9 @@ class ExtraMolecularFeatures:
         self.valency = ValencyFeature()
         self.weight = WeightFeature(max_weight=dataset_infos.max_weight, atom_weights=dataset_infos.atom_weights)
 
-    def __call__(self, noisy_data):
-        charge = self.charge(noisy_data).unsqueeze(-1)      # (bs, n, 1)
-        valency = self.valency(noisy_data).unsqueeze(-1)    # (bs, n, 1)
+    def __call__(self, noisy_data, dataset_name='qm9'):
+        charge = self.charge(noisy_data, dataset_name=dataset_name).unsqueeze(-1)      # (bs, n, 1)
+        valency = self.valency(noisy_data, dataset_name=dataset_name).unsqueeze(-1)    # (bs, n, 1)
         weight = self.weight(noisy_data)                    # (bs, 1)
 
         extra_edge_attr = torch.zeros((*noisy_data['E_t'].shape[:-1], 0)).type_as(noisy_data['E_t'])
@@ -23,8 +23,12 @@ class ChargeFeature:
         self.remove_h = remove_h
         self.valencies = valencies
 
-    def __call__(self, noisy_data):
-        bond_orders = torch.tensor([0, 1, 2, 3, 1.5], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
+    def __call__(self, noisy_data, dataset_name='qm9'):
+        print
+        if dataset_name=='uspto50k':
+            bond_orders = torch.tensor([0, 1, 2, 3], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
+        else:
+            bond_orders = torch.tensor([0, 1, 2, 3, 1.5], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
         weighted_E = noisy_data['E_t'] * bond_orders      # (bs, n, n, de)
         current_valencies = weighted_E.argmax(dim=-1).sum(dim=-1)   # (bs, n)
 
@@ -39,8 +43,11 @@ class ValencyFeature:
     def __init__(self):
         pass
 
-    def __call__(self, noisy_data):
-        orders = torch.tensor([0, 1, 2, 3, 1.5], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
+    def __call__(self, noisy_data, dataset_name='qm9'):
+        if dataset_name=='uspto50k':
+            orders = torch.tensor([0, 1, 2, 3], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
+        else:
+            orders = torch.tensor([0, 1, 2, 3, 1.5], device=noisy_data['E_t'].device).reshape(1, 1, 1, -1)
         E = noisy_data['E_t'] * orders      # (bs, n, n, de)
         valencies = E.argmax(dim=-1).sum(dim=-1)    # (bs, n)
         return valencies.type_as(noisy_data['X_t'])
