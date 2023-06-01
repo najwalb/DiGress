@@ -57,7 +57,7 @@ class BasicMolecularMetrics(object):
             else:
                 all_smiles.append(None)
 
-        return valid, len(valid) / len(generated), np.array(num_components), all_smiles
+        return valid, len(valid) / len(generated) if len(generated)>0 else 0, np.array(num_components), all_smiles
 
     def compute_uniqueness(self, valid):
         """ valid: list of SMILES strings."""
