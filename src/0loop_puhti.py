@@ -19,13 +19,13 @@ jobids_file = os.path.join(job_directory, 'jobids.txt')
 mkdir_p(job_directory)
 mkdir_p(output_dir)
 
-args_ = ['uspto50k']
+args_ = ['qm9_no_h_no_extra']
 
 for arg in args_:
     print(f"Creating job {arg}... ")
     job_file = os.path.join(job_directory, f"{arg}.job")
-    #data_file = os.path.join(data_dir, f"{arg}.csv")
-    #output_file = os.path.join(data_dir, f'rxn_{arg}.csv')
+    # data_file = os.path.join(data_dir, f"{arg}.csv")
+    # output_file = os.path.join(data_dir, f'rxn_{arg}.csv')
 
     # check data file exists:
     #assert os.path.exists(data_file), f'Data file {data_file} not found! Aborting submission.'
@@ -40,7 +40,7 @@ for arg in args_:
         fh.writelines(f"#SBATCH --gres=gpu:v100:1\n")
         fh.writelines("#SBATCH --mem-per-cpu=10G\n")
         fh.writelines("#SBATCH --cpus-per-task=4\n")
-        fh.writelines("#SBATCH --time=01:00:00\n")
+        fh.writelines("#SBATCH --time=00:30:00\n")
         fh.writelines("#SBATCH --array=1-1\n")
         fh.writelines("module purge\n")
         fh.writelines("module load gcc\n\n")
