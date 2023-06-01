@@ -1,4 +1,5 @@
 # General settings
+project: 'digress'
 name: 'graph-tf-model'      # Warning: 'debug' and 'test' are reserved name that have a special behavior
 
 wandb: 'online'             # online | offline | disabled
