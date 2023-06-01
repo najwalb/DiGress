@@ -18,7 +18,6 @@ from src.datasets.abstract_dataset import MolecularDataModule, AbstractDatasetIn
 from src.analysis.rdkit_functions import mol2smiles, build_molecule_with_partial_charges
 from src.analysis.rdkit_functions import compute_molecular_metrics
 
-
 def files_exist(files) -> bool:
     # NOTE: We return `False` in case `files` is empty, leading to a
     # re-processing of files on every instantiation.
@@ -32,7 +31,7 @@ def to_list(value: Any) -> Sequence:
 
 class RemoveYTransform:
     def __call__(self, data):
-        data.y = torch.zeros((1, 0), dtype=torch.float)
+        data.y = torch.zeros((1,0), dtype=torch.float)
         return data
 
 class SelectMuTransform:
@@ -159,11 +158,11 @@ class QM9Dataset(InMemoryDataset):
             edge_attr = F.one_hot(edge_type, num_classes=len(bonds)+1).to(torch.float)
 
             perm = (edge_index[0] * N + edge_index[1]).argsort()
-            edge_index = edge_index[:, perm]
+            edge_index = edge_index[:,perm]
             edge_attr = edge_attr[perm]
 
             x = F.one_hot(torch.tensor(type_idx), num_classes=len(types)).float()
-            y = torch.zeros((1, 0), dtype=torch.float)
+            y = torch.zeros((1,0), dtype=torch.float)
 
             if self.remove_h:
                 type_idx = torch.tensor(type_idx).long()
@@ -172,7 +171,7 @@ class QM9Dataset(InMemoryDataset):
                                                  num_nodes=len(to_keep))
                 x = x[to_keep]
                 # Shift onehot encoding to match atom decoder
-                x = x[:, 1:]
+                x = x[:,1:]
 
             data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y, idx=i)
 
@@ -184,7 +183,6 @@ class QM9Dataset(InMemoryDataset):
             data_list.append(data)
 
         torch.save(self.collate(data_list), self.processed_paths[self.file_idx])
-
 
 class QM9DataModule(MolecularDataModule):
     def __init__(self, cfg):
@@ -265,11 +263,9 @@ class QM9infos(AbstractDatasetInfos):
             self.node_types = datamodule.node_types()                                     # There are no node types
             print("Distribution of node types", self.node_types)
             np.savetxt('atom_types.txt', self.node_types.numpy())
-
             self.edge_types = datamodule.edge_counts()
             print("Distribution of edge types", self.edge_types)
             np.savetxt('edge_types.txt', self.edge_types.numpy())
-
             valencies = datamodule.valency_count(self.max_n_nodes)
             print("Distribution of the valencies", valencies)
             np.savetxt('valencies.txt', valencies.numpy())
@@ -285,6 +281,7 @@ def get_train_smiles(cfg, train_dataloader, dataset_infos, evaluate_dataset=Fals
     root_dir = pathlib.Path(os.path.realpath(__file__)).parents[2]
     smiles_file_name = 'train_smiles_no_h.npy' if remove_h else 'train_smiles_h.npy'
     smiles_path = os.path.join(root_dir, datadir, smiles_file_name)
+
     if os.path.exists(smiles_path):
         print("Dataset smiles were found.")
         train_smiles = np.load(smiles_path)
@@ -313,7 +310,6 @@ def get_train_smiles(cfg, train_dataloader, dataset_infos, evaluate_dataset=Fals
         print(metrics[0])
 
     return train_smiles
-
 
 def compute_qm9_smiles(atom_decoder, train_dataloader, remove_h):
     '''

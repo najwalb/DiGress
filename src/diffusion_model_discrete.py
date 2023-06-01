@@ -646,7 +646,7 @@ class DiscreteDenoisingDiffusion(pl.LightningModule):
             the network input. """
 
         extra_features = self.extra_features(noisy_data)
-        extra_molecular_features = self.domain_features(noisy_data, dataset_name=self.cfg.dataset.name)
+        extra_molecular_features = self.domain_features(noisy_data)
 
         extra_X = torch.cat((extra_features.X, extra_molecular_features.X), dim=-1)
         extra_E = torch.cat((extra_features.E, extra_molecular_features.E), dim=-1)

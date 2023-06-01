@@ -77,7 +77,7 @@ def get_resume_adaptive(cfg, model_kwargs):
 
 def setup_wandb(cfg):
     config_dict = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
-    kwargs = {'name': cfg.general.name, 'project': f'graph_ddm_{cfg.dataset.name}', 'config': config_dict,
+    kwargs = {'name': cfg.general.name, 'project': cfg.general.project, 'config': config_dict,
               'settings': wandb.Settings(_disable_stats=True), 'reinit': True, 'mode': cfg.general.wandb}
     wandb.init(**kwargs)
     wandb.save('*.txt')
@@ -96,8 +96,6 @@ def get_extra_features(cfg, dataset_infos):
 @hydra.main(version_base='1.1', config_path='../configs', config_name='config')
 def main(cfg: DictConfig):
     dataset_config = cfg["dataset"]
-    exit()
-
 
     if dataset_config["name"] in ['sbm', 'comm-20', 'planar']:
         if dataset_config['name'] == 'sbm':
@@ -135,9 +133,10 @@ def main(cfg: DictConfig):
             datamodule.prepare_data()
             train_smiles = qm9_dataset.get_train_smiles(cfg=cfg, train_dataloader=datamodule.train_dataloader(),
                                                         dataset_infos=dataset_infos, evaluate_dataset=False)
+            
             extra_features, domain_features = get_extra_features(cfg, dataset_infos)
             dataset_infos.compute_input_output_dims(datamodule=datamodule, extra_features=extra_features,
-                                                domain_features=domain_features)
+                                                    domain_features=domain_features)
             
         elif dataset_config['name'] == 'guacamol':
             datamodule = guacamol_dataset.GuacamolDataModule(cfg)
@@ -263,17 +262,12 @@ def main(cfg: DictConfig):
                     setup_wandb(cfg)
                     trainer.test(model, datamodule=datamodule, ckpt_path=ckpt_path)
     
-        # version control through git
+    # version control through git
     torch.save(model.state_dict(), f'model.pt')
-
-    # model_path = checkpoint_callback.best_model_path
-    # last_path  = checkpoint_callback.last_model_path
-    # print(f'last_path {last_path}\n')
-    # print(f'model_path {model_path}\n')
 
     t = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     id = cfg.general.name+'-'+t # to make id unique
-    run = wandb.init(project='graph_ddm_qm9', job_type='model', id=id)
+    run = wandb.init(project=cfg.general.project, job_type='model', id=id)
     artifact = wandb.Artifact(cfg.general.name, type='model')
     artifact.add_file('model.pt', name='model.pt')
     run.log_artifact(artifact)  
