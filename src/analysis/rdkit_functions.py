@@ -91,7 +91,7 @@ class BasicMolecularMetrics(object):
                     print("Valence error in GetmolFrags")
                 except Chem.rdchem.KekulizeException:
                     print("Can't kekulize molecule")
-        return valid, len(valid) / len(generated)
+        return valid, len(valid) / len(generated) if len(generated)>0 else 0
 
     def evaluate(self, generated):
         """ generated: list of pairs (positions: n x 3, atom_types: n [int])
