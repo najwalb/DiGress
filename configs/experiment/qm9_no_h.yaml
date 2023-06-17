@@ -1,5 +1,6 @@
 # @package _global_
 general:
+    project: 'digress'
     name : 'qm9_no_h'
     gpus : 1
     wandb: 'online'

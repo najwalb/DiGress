@@ -127,7 +127,7 @@ class AbstractDatasetInfos:
         self.input_dims['E'] += ex_extra_feat.E.size(-1)
         self.input_dims['y'] += ex_extra_feat.y.size(-1)
 
-        ex_extra_molecular_feat = domain_features(example_data, dataset_name=dataset_name)
+        ex_extra_molecular_feat = domain_features(example_data)
         self.input_dims['X'] += ex_extra_molecular_feat.X.size(-1)
         self.input_dims['E'] += ex_extra_molecular_feat.E.size(-1)
         self.input_dims['y'] += ex_extra_molecular_feat.y.size(-1)

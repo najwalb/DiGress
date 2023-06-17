@@ -1,0 +1,23 @@
+# @package _global_
+general:
+    project: 'digress'
+    name : 'qm9_no_h_no_extra'
+    gpus : 1
+    wandb: 'disabled'
+    test_only: null
+    evaluate_all_checkpoints: False
+    final_model_samples_to_generate: 0
+    final_model_samples_to_save: 0
+    final_model_chains_to_save: 0
+train:
+    n_epochs: 1 #1000
+    batch_size: 1024
+    save_model: True
+    num_workers: 0
+    seed: 0
+model:
+    n_layers: 9
+    lambda_train: [5, 0]
+    extra_features: null
+dataset:
+    remove_h: True
